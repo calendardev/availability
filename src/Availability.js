@@ -2,12 +2,22 @@ import React from 'react';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { InformationCircleIcon } from '@heroicons/react/24/solid'
 import {
   useQuery,
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query'
 import {getAvailability} from './api.js';
+
+function Loading() {
+  return (
+    <div class="calendar-loading">
+      <div></div>
+      <div></div>
+    </div>
+  )
+}
 
 export default function Availability() {
   dayjs.extend(utc);
@@ -19,7 +29,11 @@ export default function Availability() {
 
   const monthInt = d.month() + 1;
 
-  const availabilityQuery = useQuery({ queryKey: ['availability', d.month], queryFn: getAvailability });
+  const availabilityQuery = useQuery({
+    retry: 1,
+    queryKey: ['availability', d.month],
+    queryFn: getAvailability
+  });
 
   function displayDate() {
     return d.format('MMMM YYYY');
@@ -51,17 +65,70 @@ export default function Availability() {
     }
   }
 
+  function Unauthorized() {
+    function getStatus() {
+      return availabilityQuery.error.response?.status;
+    }
+
+    function getStatusText() {
+      return availabilityQuery.error.response?.statusText;
+    }
+
+    function getError() {
+      return `${getStatus()} ${getStatusText()}`
+    }
+
+    const error = availabilityQuery.error.response?.statusText;
+    console.log(error)
+    return (
+      <div className="rounded-md bg-blue-50 p-4 mb-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <InformationCircleIcon className="h-5 w-5 text-blue-400" aria-hidden="true" />
+          </div>
+          <div className="ml-3 flex-1 md:flex md:justify-between">
+            <p className="text-sm text-blue-700">{getError()}</p>
+            <p className="mt-3 text-sm md:mt-0 md:ml-6">
+              <a href="https://docs.updock.co/reference/calendareventslist" target="_blank" className="whitespace-nowrap font-medium text-blue-700 hover:text-blue-600">
+                Details
+                <span aria-hidden="true"> &rarr;</span>
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   function DaysOfTheWeek() {
     const days = "smtwtfs".toUpperCase().split("");
     const listItems = days.map((day, i) =>
       <div key={i}>{day}</div>
     );
     return (
-      <div className="mt-10 text-center lg:col-start-8 lg:col-end-13 lg:row-start-1 lg:mt-9 xl:col-start-9">
-        <div className="mt-6 grid grid-cols-7 text-xs leading-6 text-gray-500">
-          {listItems}
-        </div>
-      </div>
+      <>
+        {
+          availabilityQuery.isLoading ?
+          (
+            (null)
+          ) :
+          (
+            availabilityQuery.isError ?
+            (
+              (null)
+            )
+            :
+            (
+              <div className="mt-10 text-center lg:col-start-8 lg:col-end-13 lg:row-start-1 lg:mt-9 xl:col-start-9">
+                <div className="mt-6 grid grid-cols-7 text-xs leading-6 text-gray-500">
+                  {listItems}
+                </div>
+              </div>
+
+            )
+          )
+        }
+      </>
     );
   }
 
@@ -75,6 +142,13 @@ export default function Availability() {
     )
   }
 
+  function DisplayDate() {
+    if(availabilityQuery.isError || availabilityQuery.isLoading){
+      return (null)
+    }
+    return (<p>{displayDate()}</p>);
+  }
+
   function CalendarDates() {
     const firstDay = firstDayOfMonth();
     const lastDate = lastDateOfMonth();
@@ -82,13 +156,32 @@ export default function Availability() {
     const listItems = cells.map((day, i) => {
       const invisible = (i >= firstDay && ((i + 1) - firstDay) <= lastDate) ? "" : "invisible";
       return (
-        <CalendarDateButton invisible={invisible} firstDay={firstDay} day={day} index={i} />
+        <CalendarDateButton key={i} invisible={invisible} firstDay={firstDay} day={day} index={i} />
       )
     });
     return (
-      <div className={`ease-in duration-300 transition-all isolate mt-2 grid grid-cols-7 gap-px rounded-lg text-sm ${availabilityQuery.isLoading ? "scale-0" : "scale-100"}`}>
-        {listItems}
-      </div>
+      <>
+        {
+          availabilityQuery.isLoading ?
+          (
+            <div className="flex justify-center mt-5">
+              <Loading />
+            </div>
+          ) :
+          (
+            availabilityQuery.isError ?
+            (
+              <Unauthorized />
+            )
+            :
+            (
+              <div className={`ease-in duration-300 transition-all isolate mt-2 grid grid-cols-7 gap-px rounded-lg text-sm ${availabilityQuery.isLoading ? "scale-0" : "scale-100"}`}>
+                {listItems}
+              </div>
+            )
+          )
+        }
+      </>
     )
   }
   return (
@@ -110,7 +203,7 @@ export default function Availability() {
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <div>
-              <p>{displayDate()}</p>
+              <DisplayDate />
               <DaysOfTheWeek />
               <CalendarDates />
               <p className="mt-10 font-semibold">Timezone</p>
