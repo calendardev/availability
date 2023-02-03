@@ -46,7 +46,9 @@ export default function Availability() {
   }
 
   function availableOnDate(date) {
-    
+    if(availabilityQuery.isSuccess) {
+      return availabilityQuery.data?.data?.freeDates[d.year()][d.month()+1][date]
+    }
   }
 
   function DaysOfTheWeek() {
@@ -62,6 +64,17 @@ export default function Availability() {
       </div>
     );
   }
+
+  function CalendarDateButton({invisible, firstDay, day, index}) {
+    const displayDate = `${(index + 1) - firstDay}`;
+    const available = availableOnDate(displayDate);
+    return (
+      <button key={day.toString()} disabled={available ? "disabled" : null} type="button" className={`py-2 m-1 bg-blue-100 hover:bg-blue-200 font-semibold rounded-full text-blue-700 hover:text-blue-800 disabled:text-gray-200 disabled:bg-transparent focus:z-10 ${invisible}`}>
+        <time dateTime="2021-12-27" className="mx-auto flex h-7 w-7 items-center justify-center rounded-full">{displayDate}</time>
+      </button>
+    )
+  }
+
   function CalendarDates() {
     const firstDay = firstDayOfMonth();
     const lastDate = lastDateOfMonth();
@@ -69,13 +82,11 @@ export default function Availability() {
     const listItems = cells.map((day, i) => {
       const invisible = (i >= firstDay && ((i + 1) - firstDay) <= lastDate) ? "" : "invisible";
       return (
-        <button key={day.toString()} type="button" className={`bg-white py-1.5 text-gray-700 focus:z-10 ${invisible}`}>
-          <time dateTime="2021-12-27" className="mx-auto flex h-7 w-7 items-center justify-center rounded-full">{(i + 1) - firstDay}</time>
-        </button>
+        <CalendarDateButton invisible={invisible} firstDay={firstDay} day={day} index={i} />
       )
     });
     return (
-      <div className="isolate mt-2 grid grid-cols-7 gap-px rounded-lg text-sm">
+      <div className={`ease-in duration-300 transition-all isolate mt-2 grid grid-cols-7 gap-px rounded-lg text-sm ${availabilityQuery.isLoading ? "scale-0" : "scale-100"}`}>
         {listItems}
       </div>
     )
@@ -102,7 +113,7 @@ export default function Availability() {
               <p>{displayDate()}</p>
               <DaysOfTheWeek />
               <CalendarDates />
-              <p className="mt-10">Timezone</p>
+              <p className="mt-10 font-semibold">Timezone</p>
               <p>{dayjs.tz.guess()} ({displayTime()})</p>
             </div>
             <div className="mt-6">
