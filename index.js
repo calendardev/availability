@@ -47,7 +47,7 @@ app.get('/calendar/events', async (req, res) => {
   const endOfMonth = dayjs().endOf('month').toISOString();
   try {
     const {body: eventResponse} = await http.get(
-      `events/calendars/events?type=google_calendar&timeMin=${startOfMonth}&timeMax=${endOfMonth}&viewBy=freeBusy&orderBy=startTime`,
+      `events/calendars/events?type=google_calendar&timeMin=${startOfMonth}&timeMax=${endOfMonth}&viewBy=freeBusy&orderBy=startTime&tz=America%2FNew_York&interval=30`,
         null, {
         headers: {
           'calendar-user': calendarUser
@@ -56,7 +56,6 @@ app.get('/calendar/events', async (req, res) => {
     )
     res.json(eventResponse);
   } catch(err) {
-    console.log(err.response.body);
     res.status(err.response.body.status).json(err.response.body)
   }
 });

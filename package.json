@@ -8,6 +8,8 @@
     "server": "./node_modules/nodemon/bin/nodemon.js ./server.js",
     "dev": "rollup -c rollup.config.js -w",
     "build": "rollup -c",
+    "tailwind": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
+    "lint": "prettier --write ./src/*.js",
     "test": "test"
   },
   "author": "Jacob Schatz",
@@ -34,6 +36,7 @@
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "nodemon": "^2.0.20",
+    "prettier": "^2.8.3",
     "rollup": "^3.12.1",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-serve": "^2.0.2",

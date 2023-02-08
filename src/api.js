@@ -1,5 +1,5 @@
-import ky from 'ky';
+import ky from "ky";
 
 export const getAvailability = async () => {
-  return ky.get('/calendar/events').json();
-}
+  return ky.get("/calendar/events").json();
+};
