@@ -42,9 +42,15 @@ app.get('/calendars/list', async (req, res) => {
   }
 });
 
-app.get('/calendar/events', async (req, res) => {
-  const startOfMonth = dayjs().startOf('month').toISOString();
-  const endOfMonth = dayjs().endOf('month').toISOString();
+app.get('/calendar/events/:year/:month', async (req, res) => {
+  const startOfMonth = dayjs().year(req.params.year)
+    .month(parseInt(req.params.month)-1)
+    .startOf('month')
+    .toISOString();
+  const endOfMonth = dayjs().year(req.params.year)
+    .month(parseInt(req.params.month)-1)
+    .endOf('month')
+    .toISOString();
   try {
     const {body: eventResponse} = await http.get(
       `events/calendars/events?type=google_calendar&timeMin=${startOfMonth}&timeMax=${endOfMonth}&viewBy=freeBusy&orderBy=startTime&tz=America%2FNew_York&interval=30`,
