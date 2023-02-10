@@ -3,17 +3,23 @@ import { useForm } from "react-hook-form";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import customParseFormat  from "dayjs/plugin/customParseFormat";
-import { InformationCircleIcon } from "@heroicons/react/24/solid";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+import { InformationCircleIcon, ChevronRightIcon, ChevronLeftIcon, CalendarIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAvailability, createEvent } from "./api.js";
 
 function Loading() {
   return (
-    <div className="calendar-loading">
-      <div></div>
-      <div></div>
-    </div>
+    <>
+      <div className="-mt-6 flex h-5 w-full bg-gray-200 rounded-md"></div>
+      <div className="mt-4 w-vw flex h-5 w-full bg-gray-200 rounded-md"></div>
+      <div className="mt-4 flex h-5 w-full bg-gray-200 rounded-md"></div>
+      <div className="mt-4 flex h-5 w-full bg-gray-200 rounded-md"></div>
+      <div className="mt-4 flex h-5 w-full bg-gray-200 rounded-md"></div>
+      <div className="mt-4 flex h-5 w-full bg-gray-200 rounded-md"></div>
+      <div className="mt-4 flex h-5 w-full bg-gray-200 rounded-md"></div>
+      <div className="mt-4 flex h-5 w-full bg-gray-200 rounded-md"></div>
+    </>
   );
 }
 
@@ -25,30 +31,30 @@ function SubmitLoading() {
       <div></div>
       <div></div>
     </div>
-  )
+  );
 }
 
 function listFreeTimeGapsForInterval({
-    yearKey,
-    monthKey,
-    dateKey,
-    startTime,
-    endTime,
-    interval,
-  }) {
-    const gaps = [];
-    const start = dayjs(startTime);
-    const end = dayjs(endTime);
-    const diff = end.diff(start, "m");
-    const slotsAvailable = Math.floor(end.diff(start, "m") / interval);
-    for (let i = 0; i < slotsAvailable; i++) {
-      gaps.push({
-        start: start.add(interval * i, "m").format(),
-        end: start.add(interval * (i + 1), "m").format(),
-      });
-    }
-    return gaps;
+  yearKey,
+  monthKey,
+  dateKey,
+  startTime,
+  endTime,
+  interval,
+}) {
+  const gaps = [];
+  const start = dayjs(startTime);
+  const end = dayjs(endTime);
+  const diff = end.diff(start, "m");
+  const slotsAvailable = Math.floor(end.diff(start, "m") / interval);
+  for (let i = 0; i < slotsAvailable; i++) {
+    gaps.push({
+      start: start.add(interval * i, "m").format(),
+      end: start.add(interval * (i + 1), "m").format(),
+    });
   }
+  return gaps;
+}
 
 export default function Availability() {
   dayjs.extend(utc);
@@ -56,35 +62,36 @@ export default function Availability() {
   dayjs.extend(customParseFormat);
 
   const queryClient = useQueryClient();
-  const d = dayjs();
-
   const guessedTimezone = dayjs.tz.guess();
-
+  let [d, setD] = useState(dayjs())
   let [drawerIsOpen, setDrawerIsOpen] = useState(false);
   let [confirmedTime, setConfirmedTime] = useState(null);
-  let [selectedYear, setSelectedYear] = useState(d.year());
-  let [selectedMonth, setSelectedMonth] = useState(d.month());
   let [selectedDate, setSelectedDate] = useState(d.date());
-  let [freeTimesForDate, setFreeTimesForDate] = useState([])
+  let [freeTimesForDate, setFreeTimesForDate] = useState([]);
   let [isEventCreated, setIsEventCreated] = useState(false);
-
+// queryClient.invalidateQueries({ queryKey: ['availability', d.month })
   const { isSuccess, data, isLoading, isError, error } = useQuery({
     retry: 1,
-    queryKey: ["availability", d.month],
-    queryFn: () => getAvailability({
-      year: selectedYear,
-      month: selectedMonth,
-    }),
+    queryKey: ["availability", d.month(), d.year()],
+    queryFn: () => {
+      return getAvailability({
+        year: d.year(),
+        month: d.month(),
+      })
+    }
   });
 
   const { isLoading: isLoadingForm, mutate } = useMutation({
-    mutationFn: (details) => createEvent({...{date:confirmedTime.format, timezone: guessedTimezone}, ...details}),
+    mutationFn: (details) =>
+      createEvent({
+        ...{ date: confirmedTime.format, timezone: guessedTimezone },
+        ...details,
+      }),
     onSuccess() {
       setIsEventCreated(true);
     },
-    onError() {
-    }
-  })
+    onError() {},
+  });
 
   function displayDate() {
     return d.format("MMMM YYYY");
@@ -113,7 +120,7 @@ export default function Availability() {
   function availableOnDate(date) {
     if (isSuccess) {
       const available =
-        data?.data?.freeTimes[d.year()][d.month() + 1][date]?.available;
+        data?.data?.freeTimes?.[d.year()]?.[d.month() + 1]?.[date]?.available;
       if (available === undefined) {
         return true;
       }
@@ -124,11 +131,11 @@ export default function Availability() {
 
   function Unauthorized() {
     function getStatus() {
-      return error.response?.status;
+      return error.response?.status ?? "500";
     }
 
     function getStatusText() {
-      return error.response?.statusText;
+      return error.response?.statusText ?? "Service unavailable";
     }
 
     function getError() {
@@ -147,16 +154,6 @@ export default function Availability() {
           </div>
           <div className="ml-3 flex-1 md:flex md:justify-between">
             <p className="text-sm text-blue-700">{getError()}</p>
-            <p className="mt-3 text-sm md:mt-0 md:ml-6">
-              <a
-                href="https://docs.updock.co/reference/calendareventslist"
-                target="_blank"
-                className="whitespace-nowrap font-medium text-blue-700 hover:text-blue-600"
-              >
-                Details
-                <span aria-hidden="true"> &rarr;</span>
-              </a>
-            </p>
           </div>
         </div>
       </div>
@@ -182,27 +179,31 @@ export default function Availability() {
   function CalendarDateButton({ invisible, firstDay, day, index }) {
     const displayDate = `${index + 1 - firstDay}`;
     const available = availableOnDate(displayDate);
-    
+
     function setCalendarDate(date) {
-      setSelectedDate(date);
+      setSelectedDate(date.toString());
       setDrawerIsOpen(true);
-      let times = data.data.freeTimes[selectedYear][selectedMonth + 1][displayDate]?.times;
-      if(!times) {
+      let times =
+        data?.data?.freeTimes?.[d.year()]?.[d.month() + 1]?.[displayDate]
+          ?.times;
+      if (!times) {
         times = listFreeTimeGapsForInterval({
-          yearKey: selectedYear,
-          monthKey: selectedMonth,
+          yearKey: d.year(),
+          monthKey: d.month(),
           dateKey: displayDate,
-          startTime: `${selectedYear}/${selectedMonth+1}/${displayDate} 08:00-05:00`,
-          endTime: `${selectedYear}/${selectedMonth+1}/${displayDate} 17:00-05:00`,
+          startTime: d.hour(8).startOf('hour').format(),
+          endTime: d.hour(17).startOf('hour').format(),
           interval: 30,
         });
       }
-      setFreeTimesForDate(times.map(function(time) {
-        return {
-          display: dayjs(time.start).format("h:mma"),
-          format: dayjs(time.start).format()
-        }
-      }));
+      setFreeTimesForDate(
+        times.map(function (time) {
+          return {
+            display: dayjs(time.start).format("h:mma"),
+            format: dayjs(time.start).format(),
+          };
+        })
+      );
     }
     return (
       <button
@@ -210,9 +211,9 @@ export default function Availability() {
         disabled={available ? null : "disabled"}
         type="button"
         onClick={() => setCalendarDate(displayDate)}
-        className={`p-2 md:p-2 md:m-2 m-1 mx-auto bg-blue-100 hover:bg-blue-200 font-semibold rounded-full text-blue-700 hover:text-blue-800 disabled:text-gray-200 disabled:bg-transparent focus:z-10 ${invisible} ${
-          selectedDate === displayDate
-            ? "border-solid border-1 border-blue-500"
+        className={`flex items-center justify-center md:m-2 m-1 h-10 w-10 mx-auto bg-blue-100 hover:bg-blue-200 font-semibold rounded-full text-blue-700 hover:text-blue-800 disabled:text-gray-200 disabled:bg-transparent focus:z-10 ${invisible} ${
+          `${selectedDate}` === `${displayDate}`
+            ? "border-solid border-2 border-blue-700"
             : ""
         }`}
       >
@@ -230,7 +231,28 @@ export default function Availability() {
     if (isError || isLoading) {
       return null;
     }
-    return <p>{displayDate()}</p>;
+
+    function decrementMonth(e) {
+      e.preventDefault();
+      setD(d.subtract(1, 'month'));
+    }
+    function incrementMonth(e) {
+      e.preventDefault();
+      setD(d.add(1, 'month'));
+    }
+    return (
+      <div className="flex">
+        <span>{displayDate()}</span>
+        <span className="flex justify-end grow">
+          <a href="#" onClick={decrementMonth}>
+            <ChevronLeftIcon className="h-5 w-5 mr-5 text-gray-400" aria-hidden="true" />
+          </a>
+          <a href="#" onClick={incrementMonth}>
+            <ChevronRightIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+          </a>
+        </span>
+      </div>
+    );
   }
 
   function timeConfirmed({ time }) {
@@ -243,41 +265,56 @@ export default function Availability() {
       <button
         type="button"
         className="mb-2 inline-flex items-center rounded border border-transparent bg-blue-100 px-10 py-1.5 text-md font-large text-blue-700 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        onClick={() => { timeConfirmed({time}) }}
+        onClick={() => {
+          timeConfirmed({ time });
+        }}
       >
-        <time
-          dateTime={time.format}
-          className="mx-auto text-center">{time.display}</time>
+        <time dateTime={time.format} className="mx-auto text-center">
+          {time.display}
+        </time>
       </button>
     );
   }
 
-  function TimeButtons({times}) {
-    const renderedTimes = times.map(time => {
-      return (
-        <TimeButton key={time.format} time={time} />
-      )
+  function TimeButtons({ times }) {
+    const renderedTimes = times.map((time) => {
+      return <TimeButton key={time.format} time={time} />;
     });
     return (
       <div className="w-full shadow md:w-1/3 lg:w-1/3 md:px-5 lg:px-5 mx-auto bg-gray-50 py-5 px-10 rounded-r-md flex flex-col">
         {renderedTimes}
       </div>
-    )
+    );
   }
 
   function selectedFormattedDate() {
-    return `${dayjs(confirmedTime?.format).format('dddd, MMMM D, YYYY [at] h:mma')} ${guessedTimezone}`;
+    return `${dayjs(confirmedTime?.format).format(
+      "dddd, MMMM D, YYYY [at] h:mma"
+    )} ${guessedTimezone}`;
   }
 
   function ConfirmationForm() {
-    const { register, handleSubmit, formState: { errors }} = useForm()
+    const {
+      register,
+      handleSubmit,
+      formState: { errors },
+    } = useForm();
     return (
-      <div className={`bg-white py-8 px-4 shadow sm:px-10 grow sm:rounded-lg ${(!confirmedTime?.format || isEventCreated) ? "hidden" : ""}`}>
-        <form onSubmit={handleSubmit(mutate)} className="space-y-8 divide-y divide-gray-200">
+      <div
+        className={`bg-white py-8 px-4 shadow sm:px-10 grow sm:rounded-lg ${
+          !confirmedTime?.format || isEventCreated ? "hidden" : ""
+        }`}
+      >
+        <form
+          onSubmit={handleSubmit(mutate)}
+          className="space-y-8 divide-y divide-gray-200"
+        >
           <div className="space-y-8 divide-y divide-gray-200">
             <div>
               <div>
-                <h3 className="text-lg font-medium leading-6 text-gray-900">Confirming your chat for:</h3>
+                <h3 className="text-lg font-medium leading-6 text-gray-900">
+                  Confirming your chat for:
+                </h3>
                 <p className="mt-1 text-sm text-gray-500">
                   {selectedFormattedDate()}
                 </p>
@@ -285,13 +322,16 @@ export default function Availability() {
 
               <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div className="sm:col-span-6">
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Name
                   </label>
                   <div className="mt-1">
                     <input
                       type="text"
-                      {...register("name", {required: "Name is required"})}
+                      {...register("name", { required: "Name is required" })}
                       id="name"
                       disabled={isLoadingForm}
                       autoComplete="given-name"
@@ -303,7 +343,10 @@ export default function Availability() {
                   </p>
                 </div>
                 <div className="sm:col-span-6">
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Email
                   </label>
                   <div className="mt-1">
@@ -313,8 +356,8 @@ export default function Availability() {
                         required: "Email address is required",
                         pattern: {
                           value: /\S+@\S+\.\S+/,
-                          message: "Please enter a valid email"
-                        }
+                          message: "Please enter a valid email",
+                        },
                       })}
                       disabled={isLoadingForm}
                       id="email"
@@ -327,7 +370,10 @@ export default function Availability() {
                   </p>
                 </div>
                 <div className="sm:col-span-6">
-                  <label htmlFor="details" className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="details"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Details
                   </label>
                   <div className="mt-1">
@@ -344,16 +390,14 @@ export default function Availability() {
                 <div className="sm:col-span-6">
                   <div className="mt-1 flex">
                     <button
-                      className="mb-2 inline-flex items-center rounded-md border border-transparent bg-blue-500 px-10 py-1.5 text-md font-large text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+                      className="transition-all duration-150 ease-out mb-2 inline-flex items-center rounded-md border border-transparent bg-blue-500 px-10 py-1.5 text-md font-large text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
                       type="submit"
                     >
-                      {
-                        isLoadingForm ? (
-                          <SubmitLoading />
-                        ) : (
-                          <span>Schedule Chat</span>
-                        )
-                      }
+                      {isLoadingForm ? (
+                        <SubmitLoading />
+                      ) : (
+                        <span>Schedule Chat</span>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -362,7 +406,7 @@ export default function Availability() {
           </div>
         </form>
       </div>
-    )
+    );
   }
 
   function CalendarDates() {
@@ -385,7 +429,7 @@ export default function Availability() {
     return (
       <>
         {isLoading ? (
-          <div className="flex justify-center mt-5">
+          <div className="transition-all flex flex-col justify-center mt-5">
             <Loading />
           </div>
         ) : isError ? (
@@ -404,7 +448,11 @@ export default function Availability() {
   }
   function CalendarView() {
     return (
-      <div className={`bg-white py-8 px-4 shadow sm:px-10 grow ${drawerIsOpen ? "sm:rounded-l-lg" : "sm:rounded-lg"} ${drawerIsOpen ? "hidden md:block lg:block" : ""}`}>
+      <div
+        className={`bg-white py-8 px-4 shadow sm:px-10 grow ${
+          drawerIsOpen ? "sm:rounded-l-lg" : "sm:rounded-lg"
+        } ${drawerIsOpen ? "hidden md:block lg:block" : ""}`}
+      >
         <div>
           <DisplayDate />
           <DaysOfTheWeek />
@@ -465,7 +513,7 @@ export default function Availability() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   function BrandLogo() {
@@ -490,13 +538,17 @@ export default function Availability() {
           />
         </g>
       </svg>
-    )
+    );
   }
 
   function Confirmation() {
     return (
-      <p>Confirmation</p>
-    )
+      <div className="flex flex-col mt-1 text-lg text-gray-800 bg-white shadow py-8 px-4 shadow sm:px-10 rounded-lg">
+        <div className="flex"><InformationCircleIcon className="h-7 w-7 mr-4 text-blue-500" /> You are confirmed!</div>
+        <div className="flex"><CalendarIcon className="h-7 w-7 mr-4 text-blue-500" />{selectedFormattedDate()}</div>
+        <div className="flex"><EnvelopeIcon className="h-7 w-7 mr-4 text-blue-500" />Check your email for an invitation.</div>
+      </div>
+    );
   }
 
   return (
@@ -507,21 +559,12 @@ export default function Availability() {
           <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
             Talk with UpDock
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Check our availability and get on our calendar
-          </p>
         </div>
         <div className="mt-8 md:mx-auto lg:mx-auto flex">
-          {!confirmedTime ? (
-            <CalendarView />
-          ) : (null)}
-          {drawerIsOpen ? (
-            <TimeButtons times={freeTimesForDate}/>
-          ) : (null)}
-            <ConfirmationForm />
-          {isEventCreated ? (
-            <Confirmation />
-          ) : (null)}
+          {!confirmedTime ? <CalendarView /> : null}
+          {drawerIsOpen ? <TimeButtons times={freeTimesForDate} /> : null}
+          <ConfirmationForm />
+          {isEventCreated ? <Confirmation /> : null}
         </div>
       </div>
     </>

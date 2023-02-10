@@ -13,7 +13,7 @@
     "test": "test"
   },
   "author": "Jacob Schatz",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@heroicons/react": "^2.0.14",
     "@tanstack/react-query": "^4.24.4",
