@@ -32,9 +32,10 @@ export default function(token) {
       return req.send(data)
     },
 
-    post(route, data) {
+    post(route, data, options) {
       let req = request
               .post(this._buildApiRoot(route, options))
+              .send(data) 
               .set('Accept', 'application/json')
               .auth(token, { type: "bearer" })
 

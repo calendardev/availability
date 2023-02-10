@@ -8,13 +8,16 @@
     "server": "./node_modules/nodemon/bin/nodemon.js ./server.js",
     "dev": "rollup -c rollup.config.js -w",
     "build": "rollup -c",
+    "tailwind": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
+    "lint": "prettier --write ./src/*.js",
     "test": "test"
   },
   "author": "Jacob Schatz",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@heroicons/react": "^2.0.14",
     "@tanstack/react-query": "^4.24.4",
+    "body-parser": "^1.20.1",
     "cors": "^2.8.5",
     "dayjs": "^1.11.7",
     "ejs": "^3.1.8",
@@ -22,6 +25,7 @@
     "ky": "^0.33.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hook-form": "^7.43.1",
     "superagent": "^8.0.9"
   },
   "devDependencies": {
@@ -34,6 +38,7 @@
     "debug": "^4.3.4",
     "dotenv": "^16.0.3",
     "nodemon": "^2.0.20",
+    "prettier": "^2.8.3",
     "rollup": "^3.12.1",
     "rollup-plugin-livereload": "^2.0.5",
     "rollup-plugin-serve": "^2.0.2",
