@@ -1,11 +1,12 @@
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import customParseFormat  from "dayjs/plugin/customParseFormat";
 import { InformationCircleIcon } from "@heroicons/react/24/solid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAvailability } from "./api.js";
+import { getAvailability, createEvent } from "./api.js";
 
 function Loading() {
   return (
@@ -18,7 +19,7 @@ function Loading() {
 
 function SubmitLoading() {
   return (
-    <div class="submit-loading">
+    <div className="submit-loading">
       <div></div>
       <div></div>
       <div></div>
@@ -57,12 +58,15 @@ export default function Availability() {
   const queryClient = useQueryClient();
   const d = dayjs();
 
+  const guessedTimezone = dayjs.tz.guess();
+
   let [drawerIsOpen, setDrawerIsOpen] = useState(false);
   let [confirmedTime, setConfirmedTime] = useState(null);
   let [selectedYear, setSelectedYear] = useState(d.year());
   let [selectedMonth, setSelectedMonth] = useState(d.month());
   let [selectedDate, setSelectedDate] = useState(d.date());
   let [freeTimesForDate, setFreeTimesForDate] = useState([])
+  let [isEventCreated, setIsEventCreated] = useState(false);
 
   const { isSuccess, data, isLoading, isError, error } = useQuery({
     retry: 1,
@@ -72,6 +76,15 @@ export default function Availability() {
       month: selectedMonth,
     }),
   });
+
+  const { isLoading: isLoadingForm, mutate } = useMutation({
+    mutationFn: (details) => createEvent({...{date:confirmedTime.format, timezone: guessedTimezone}, ...details}),
+    onSuccess() {
+      setIsEventCreated(true);
+    },
+    onError() {
+    }
+  })
 
   function displayDate() {
     return d.format("MMMM YYYY");
@@ -169,7 +182,9 @@ export default function Availability() {
   function CalendarDateButton({ invisible, firstDay, day, index }) {
     const displayDate = `${index + 1 - firstDay}`;
     const available = availableOnDate(displayDate);
-    function setCalendarDate() {
+    
+    function setCalendarDate(date) {
+      setSelectedDate(date);
       setDrawerIsOpen(true);
       let times = data.data.freeTimes[selectedYear][selectedMonth + 1][displayDate]?.times;
       if(!times) {
@@ -251,13 +266,14 @@ export default function Availability() {
   }
 
   function selectedFormattedDate() {
-    return `${dayjs(confirmedTime.format).format('dddd, MMMM D, YYYY [at] h:mma')} ${dayjs.tz.guess()}`;
+    return `${dayjs(confirmedTime?.format).format('dddd, MMMM D, YYYY [at] h:mma')} ${guessedTimezone}`;
   }
 
   function ConfirmationForm() {
+    const { register, handleSubmit, formState: { errors }} = useForm()
     return (
-      <div className="bg-white py-8 px-4 shadow sm:px-10 grow sm:rounded-lg">
-        <form className="space-y-8 divide-y divide-gray-200">
+      <div className={`bg-white py-8 px-4 shadow sm:px-10 grow sm:rounded-lg ${(!confirmedTime?.format || isEventCreated) ? "hidden" : ""}`}>
+        <form onSubmit={handleSubmit(mutate)} className="space-y-8 divide-y divide-gray-200">
           <div className="space-y-8 divide-y divide-gray-200">
             <div>
               <div>
@@ -275,12 +291,16 @@ export default function Availability() {
                   <div className="mt-1">
                     <input
                       type="text"
-                      name="name"
+                      {...register("name", {required: "Name is required"})}
                       id="name"
+                      disabled={isLoadingForm}
                       autoComplete="given-name"
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="block w-full disabled:bg-gray-50 disabled:border-gray-100 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   </div>
+                  <p className="mt-2 text-sm text-red-600" id="email-error">
+                    {errors.name && errors.name.message}
+                  </p>
                 </div>
                 <div className="sm:col-span-6">
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -288,13 +308,23 @@ export default function Availability() {
                   </label>
                   <div className="mt-1">
                     <input
-                      type="text"
-                      name="email"
+                      type="email"
+                      {...register("email", {
+                        required: "Email address is required",
+                        pattern: {
+                          value: /\S+@\S+\.\S+/,
+                          message: "Please enter a valid email"
+                        }
+                      })}
+                      disabled={isLoadingForm}
                       id="email"
                       autoComplete="email"
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="block w-full disabled:bg-gray-50 disabled:border-gray-100 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   </div>
+                  <p className="mt-2 text-sm text-red-600" id="email-error">
+                    {errors.email && errors.email.message}
+                  </p>
                 </div>
                 <div className="sm:col-span-6">
                   <label htmlFor="details" className="block text-sm font-medium text-gray-700">
@@ -303,19 +333,28 @@ export default function Availability() {
                   <div className="mt-1">
                     <textarea
                       type="text"
-                      name="details"
+                      {...register("details")}
+                      disabled={isLoadingForm}
                       id="details"
                       autoComplete="details"
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      className="block w-full disabled:bg-gray-50 disabled:border-gray-100 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                     />
                   </div>
                 </div>
                 <div className="sm:col-span-6">
-                  <div className="mt-1">
-                    <a href="#" className="shadow flex items-center justify-center border border-transparent text-base font-medium rounded-md bg-blue-500 hover:bg-blue-700 text-white">
-                      <span>Schedule Chat</span>
-                      <SubmitLoading />
-                    </a>
+                  <div className="mt-1 flex">
+                    <button
+                      className="mb-2 inline-flex items-center rounded-md border border-transparent bg-blue-500 px-10 py-1.5 text-md font-large text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+                      type="submit"
+                    >
+                      {
+                        isLoadingForm ? (
+                          <SubmitLoading />
+                        ) : (
+                          <span>Schedule Chat</span>
+                        )
+                      }
+                    </button>
                   </div>
                 </div>
               </div>
@@ -372,7 +411,7 @@ export default function Availability() {
           <CalendarDates />
           <p className="mt-10 font-semibold">Timezone</p>
           <p>
-            {dayjs.tz.guess()} ({displayTime()})
+            {guessedTimezone} ({displayTime()})
           </p>
         </div>
         <div className="mt-6">
@@ -454,6 +493,12 @@ export default function Availability() {
     )
   }
 
+  function Confirmation() {
+    return (
+      <p>Confirmation</p>
+    )
+  }
+
   return (
     <>
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -473,8 +518,9 @@ export default function Availability() {
           {drawerIsOpen ? (
             <TimeButtons times={freeTimesForDate}/>
           ) : (null)}
-          {confirmedTime ? (
             <ConfirmationForm />
+          {isEventCreated ? (
+            <Confirmation />
           ) : (null)}
         </div>
       </div>

@@ -4,6 +4,7 @@ import debug from "debug";
 import path from "path";
 import dotenv from "dotenv";
 import utils from "./utils.js";
+import bodyParser from 'body-parser';
 
 const currentDirectory = path.resolve(path.dirname('')); 
 
@@ -12,8 +13,8 @@ dotenv.config()
 const app = express()
 const port = 3002
 
-app.use(express.static('./dist'))
-
+app.use(bodyParser.json());
+app.use(express.static('./dist'));
 app.set('view engine', 'ejs');
 
 const http = utils(process.env.UPDOCK_API_TOKEN);
@@ -66,8 +67,41 @@ app.get('/calendar/events/:year/:month', async (req, res) => {
   }
 });
 
+app.post('/calendar/events', async (req, res) => {
+  try {
+    const {date, name, email, details, timezone} = req.body;
+    const {body: createResponse} = await http.post(
+      `events/calendars/events?type=google_calendar`,
+      {
+        title: `${name} and UpDock`,
+        description: details,
+        start: {
+          dateTime: date,
+          timezone,
+        },
+        end: {
+          dateTime: dayjs(date).add(30, 'm').format(),
+          timezone,
+        },
+        attendees: [{
+            email,
+        }],
+      },
+      {
+        headers: {
+          'calendar-user': calendarUser,
+        }
+      }
+    );
+
+    return res.json(createResponse);
+  } catch(err) {
+    debug(err);
+    return res.status(500).json({msg: "err"})
+  }
+});
+
 function notFoundHandler(req, res, next) {
-  console.log("not found");
   return res.status(404).json({ msg: "not found" });
 }
 
