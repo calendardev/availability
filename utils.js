@@ -1,6 +1,6 @@
 import request from 'superagent';
 // const base = "https://updock.co/";
-const base = "http://localhost:3001";
+const base = "https://updock.co";
 const apiBase = "api";
 
 export default function(token) {
