@@ -11,7 +11,7 @@ const currentDirectory = path.resolve(path.dirname(''));
 dotenv.config()
 
 const app = express()
-const port = 3002
+const port = 3000
 
 app.use(bodyParser.json());
 app.use(express.static('./dist'));
