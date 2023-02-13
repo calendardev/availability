@@ -63,6 +63,7 @@ app.get('/calendar/events/:year/:month', async (req, res) => {
     )
     res.json(eventResponse);
   } catch(err) {
+    console.log(err)
     res.status(err.response.body.status).json(err.response.body)
   }
 });
