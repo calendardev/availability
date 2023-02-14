@@ -273,7 +273,7 @@ export default function Availability() {
         type="button"
         className="mb-2 inline-flex items-center rounded border border-transparent bg-blue-100 px-10 py-1.5 text-md font-large text-blue-700 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         onClick={() => {
-          url.pathname += 'confirm';
+          url.pathname += 'confirmation';
           history.pushState({page: "timeConfirm", drawerisOpen: false}, '', url)
           timeConfirmed({ time });
         }}
