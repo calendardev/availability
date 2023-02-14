@@ -7,7 +7,6 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { InformationCircleIcon, ChevronRightIcon, ChevronLeftIcon, CalendarIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAvailability, createEvent } from "./api.js";
-import { set } from "lodash";
 
 function Loading() {
   return (
@@ -61,10 +60,10 @@ export default function Availability() {
   const url = new URL(window.location);
 
   useEffect(() => {
-    history.pushState({page: "availability", drawerIsOpen: false}, '', url)
+    history.replaceState({page: "availability", drawerIsOpen}, '', url)
     addEventListener('popstate', (event) => {
-      setDrawerIsOpen(event.state.drawerisOpen);
-      if(event.state.page === 'availability') setConfirmedTime(null);
+        if(event.state.page === 'availability') setConfirmedTime(null);
+        setDrawerIsOpen(event.state.drawerIsOpen || false);
     })
   }, [])
 
@@ -191,7 +190,7 @@ export default function Availability() {
       setSelectedDate(date.toString());
       const selectedDate = d.set('date', date);
       setDrawerIsOpen(true);
-      history.replaceState({page: history.state.page, drawerisOpen: true}, '', url)
+      history.replaceState({page: "availability", drawerIsOpen: true}, '', url)
       let times =
         data?.data?.freeTimes?.[d.year()]?.[d.month() + 1]?.[displayDate]
           ?.times;
@@ -240,11 +239,13 @@ export default function Availability() {
 
     function decrementMonth(e) {
       e.preventDefault();
-      setD(d.subtract(1, 'month'));
+      const newD = d.subtract(1, 'month')
+      setD(newD);
     }
     function incrementMonth(e) {
       e.preventDefault();
-      setD(d.add(1, 'month'));
+      const newD = d.add(1, 'month')
+      setD(newD);
     }
     return (
       <div className="flex">
