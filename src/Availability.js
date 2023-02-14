@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -7,6 +7,7 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import { InformationCircleIcon, ChevronRightIcon, ChevronLeftIcon, CalendarIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAvailability, createEvent } from "./api.js";
+import { set } from "lodash";
 
 function Loading() {
   return (
@@ -57,6 +58,15 @@ export default function Availability() {
   dayjs.extend(utc);
   dayjs.extend(timezone);
   dayjs.extend(customParseFormat);
+  const url = new URL(window.location);
+
+  useEffect(() => {
+    history.pushState({page: "availability", drawerIsOpen: false}, '', url)
+    addEventListener('popstate', (event) => {
+      setDrawerIsOpen(event.state.drawerisOpen);
+      if(event.state.page === 'availability') setConfirmedTime(null);
+    })
+  }, [])
 
   const queryClient = useQueryClient();
   const guessedTimezone = dayjs.tz.guess();
@@ -181,6 +191,7 @@ export default function Availability() {
       setSelectedDate(date.toString());
       const selectedDate = d.set('date', date);
       setDrawerIsOpen(true);
+      history.replaceState({page: history.state.page, drawerisOpen: true}, '', url)
       let times =
         data?.data?.freeTimes?.[d.year()]?.[d.month() + 1]?.[displayDate]
           ?.times;
@@ -261,6 +272,7 @@ export default function Availability() {
         type="button"
         className="mb-2 inline-flex items-center rounded border border-transparent bg-blue-100 px-10 py-1.5 text-md font-large text-blue-700 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         onClick={() => {
+          history.pushState({page: "timeConfirm", drawerisOpen: false}, '', url)
           timeConfirmed({ time });
         }}
       >
@@ -538,7 +550,7 @@ export default function Availability() {
 
   function Confirmation() {
     return (
-      <div className="flex flex-col mt-1 text-lg text-gray-800 bg-white shadow py-8 px-4 shadow sm:px-10 rounded-lg">
+      <div className="flex flex-col mt-1 text-lg text-gray-800 bg-white shadow py-8 px-4 sm:px-10 rounded-lg">
         <div className="flex"><InformationCircleIcon className="h-7 w-7 mr-4 text-blue-500" /> You are confirmed!</div>
         <div className="flex"><CalendarIcon className="h-7 w-7 mr-4 text-blue-500" />{selectedFormattedDate()}</div>
         <div className="flex"><EnvelopeIcon className="h-7 w-7 mr-4 text-blue-500" />Check your email for an invitation.</div>
