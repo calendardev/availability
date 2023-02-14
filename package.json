@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "server": "./node_modules/nodemon/bin/nodemon.js ./server.js",
-    "dev": "rollup -c rollup.config.js -w",
+    "dev": "rollup -c -w",
     "build": "rollup -c",
     "tailwind": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "lint": "prettier --write ./src/*.js",
