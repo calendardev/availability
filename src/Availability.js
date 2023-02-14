@@ -35,9 +35,6 @@ function SubmitLoading() {
 }
 
 function listFreeTimeGapsForInterval({
-  yearKey,
-  monthKey,
-  dateKey,
   startTime,
   endTime,
   interval,
@@ -182,17 +179,15 @@ export default function Availability() {
 
     function setCalendarDate(date) {
       setSelectedDate(date.toString());
+      const selectedDate = d.set('date', date);
       setDrawerIsOpen(true);
       let times =
         data?.data?.freeTimes?.[d.year()]?.[d.month() + 1]?.[displayDate]
           ?.times;
       if (!times) {
         times = listFreeTimeGapsForInterval({
-          yearKey: d.year(),
-          monthKey: d.month(),
-          dateKey: displayDate,
-          startTime: d.hour(8).startOf('hour').format(),
-          endTime: d.hour(17).startOf('hour').format(),
+          startTime: selectedDate.hour(8).startOf('hour').format(),
+          endTime: selectedDate.hour(17).startOf('hour').format(),
           interval: 30,
         });
       }
