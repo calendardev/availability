@@ -290,7 +290,7 @@ export default function Availability() {
       return <TimeButton key={time.format} time={time} />;
     });
     return (
-      <div className="w-full shadow md:w-1/3 lg:w-1/3 md:px-5 lg:px-5 mx-auto bg-gray-50 py-5 px-10 rounded-r-md flex flex-col">
+      <div className="w-full shadow md:w-1/3 lg:w-52 md:px-5 lg:px-5 mx-auto bg-gray-50 py-5 px-10 rounded-r-md flex flex-col">
         {renderedTimes}
       </div>
     );
