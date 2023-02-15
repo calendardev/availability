@@ -190,7 +190,7 @@ export default function Availability() {
       setSelectedDate(date.toString());
       const selectedDate = d.set('date', date);
       setDrawerIsOpen(true);
-      history.replaceState({page: "availability", drawerIsOpen: true}, '', url)
+      history.pushState({page: "availability", drawerIsOpen: true}, '', url)
       let times =
         data?.data?.freeTimes?.[d.year()]?.[d.month() + 1]?.[displayDate]
           ?.times;
