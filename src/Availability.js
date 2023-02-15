@@ -217,7 +217,7 @@ export default function Availability() {
         type="button"
         onClick={() => setCalendarDate(displayDate)}
         className={`flex items-center justify-center md:m-2 m-1 h-10 w-10 mx-auto bg-blue-100 hover:bg-blue-200 font-semibold rounded-full text-blue-700 hover:text-blue-800 disabled:text-gray-200 disabled:bg-transparent focus:z-10 ${invisible} ${
-          `${selectedDate}` === `${displayDate}`
+          isLoading ? "disabled:bg-blue-100 disabled:text-blue-900" : `${selectedDate}` === `${displayDate}`
             ? "border-solid border-2 border-blue-700"
             : ""
         }`}
