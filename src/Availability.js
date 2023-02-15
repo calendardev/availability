@@ -171,7 +171,7 @@ export default function Availability() {
     const listItems = days.map((day, i) => <div key={i}>{day}</div>);
     return (
       <>
-        {isLoading ? null : isError ? null : (
+        {isError ? null : (
           <div className="mt-10 text-center lg:col-start-8 lg:col-end-13 lg:row-start-1 lg:mt-9 xl:col-start-9">
             <div className="mt-6 grid grid-cols-7 text-xs leading-6 text-gray-500">
               {listItems}
@@ -189,8 +189,8 @@ export default function Availability() {
     function setCalendarDate(date) {
       setSelectedDate(date.toString());
       const selectedDate = d.set('date', date);
+      if(!drawerIsOpen) history.pushState({page: "availability", drawerIsOpen: true}, '', url);
       setDrawerIsOpen(true);
-      history.pushState({page: "availability", drawerIsOpen: true}, '', url)
       let times =
         data?.data?.freeTimes?.[d.year()]?.[d.month() + 1]?.[displayDate]
           ?.times;
@@ -233,7 +233,7 @@ export default function Availability() {
   }
 
   function DisplayDate() {
-    if (isError || isLoading) {
+    if (isError) {
       return null;
     }
 
@@ -437,17 +437,11 @@ export default function Availability() {
     });
     return (
       <>
-        {isLoading ? (
-          <div className="transition-all flex flex-col justify-center mt-5">
-            <Loading />
-          </div>
-        ) : isError ? (
+        { isError ? (
           <Unauthorized />
         ) : (
           <div
-            className={`ease-in duration-300 transition-all isolate mt-2 grid grid-cols-7 md:gap-px rounded-lg text-sm ${
-              isLoading ? "scale-0" : "scale-100"
-            }`}
+            className={`ease-in duration-300 transition-all isolate mt-2 grid grid-cols-7 md:gap-px rounded-lg text-sm`}
           >
             {listItems}
           </div>
@@ -552,7 +546,7 @@ export default function Availability() {
 
   function Confirmation() {
     return (
-      <div className="flex flex-col mt-1 text-lg text-gray-800 bg-white shadow py-8 px-4 sm:px-10 rounded-lg">
+      <div className="flex flex-col mt-1 text-lg text-gray-800 bg-white shadow py-8 px-4 sm:px-10 rounded-lg space-y-3">
         <div className="flex"><InformationCircleIcon className="h-7 w-7 mr-4 text-blue-500" /> You are confirmed!</div>
         <div className="flex"><CalendarIcon className="h-7 w-7 mr-4 text-blue-500" />{selectedFormattedDate()}</div>
         <div className="flex"><EnvelopeIcon className="h-7 w-7 mr-4 text-blue-500" />Check your email for an invitation.</div>
