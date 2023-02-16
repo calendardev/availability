@@ -10,7 +10,8 @@
     "build": "rollup -c",
     "tailwind": "npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
     "lint": "prettier --write ./src/*.js",
-    "test": "test"
+    "test": "test",
+    "all": "npm run server & npm run dev & npm run tailwind ; fg"
   },
   "author": "Jacob Schatz",
   "license": "MIT",
