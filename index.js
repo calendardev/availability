@@ -63,7 +63,6 @@ app.get('/calendar/events/:year/:month', async (req, res) => {
     )
     res.json(eventResponse);
   } catch(err) {
-    console.log(err)
     res.status(err.response.body.status).json(err.response.body)
   }
 });
@@ -74,7 +73,7 @@ app.post('/calendar/events', async (req, res) => {
     const {body: createResponse} = await http.post(
       `events/calendars/events?type=google_calendar`,
       {
-        title: `${name} and UpDock`,
+        title: `${name} and Calendar.dev`,
         description: details,
         start: {
           dateTime: date,

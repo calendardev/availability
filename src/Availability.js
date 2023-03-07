@@ -479,10 +479,10 @@ export default function Availability() {
           <div className="mt-6 grid grid-cols-2 gap-3">
             <div>
               <a
-                href="https://twitter.com/UpDockCal"
+                href="https://twitter.com/calendardevs"
                 className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50"
               >
-                <span className="sr-only">@UpDockCal on Twitter</span>
+                <span className="sr-only">@calendardevs on Twitter</span>
                 <svg
                   className="h-5 w-5"
                   aria-hidden="true"
@@ -495,7 +495,7 @@ export default function Availability() {
             </div>
             <div>
               <a
-                href="https://github.com/updock"
+                href="https://github.com/calendardev"
                 className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50"
               >
                 <span className="sr-only">Access our GitHub Repo</span>
@@ -559,7 +559,7 @@ export default function Availability() {
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8 max-h-screen">
         <div className="sm:mx-auto sm:w-full sm:max-w-2xl md:max-w-2xl">
           <h2 className="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900">
-            Talk with UpDock
+            Talk with Calendar.dev
           </h2>
         </div>
         <div className="mt-8 md:mx-auto lg:mx-auto flex h-[691px]">
